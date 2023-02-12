@@ -11,8 +11,10 @@ import Container from '@mui/material/Container';
 import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Fade from '@mui/material/Fade';
-import {Button, Checkbox} from "@mui/material";
+import {Button, Checkbox, createTheme, ThemeProvider} from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import CancelIcon from '@mui/icons-material/Cancel';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -20,18 +22,43 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import MenuIcon from '@mui/icons-material/Menu';
+import {blue, red} from '@mui/material/colors';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { useImmer } from 'use-immer';
+
+import uuid from 'react-uuid';
 
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
+const theme = createTheme({
+	palette: {
+		primary: {
+			main: blue[800]
+		},
+		secondary: {
+			main: blue[700]
+		},
+		error: {
+			main: red[500]
+		}
+	},
+});
+
+
+
+
+function createData(id, title, description, deadline, priority, isComplete) {
+  return { id, title, description, deadline, priority, isComplete };
 }
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
+
+let rows = [
+  createData(uuid(), 'Frozen yoghurt', 159, 6.0, 24, false),
+  createData(uuid(), 'Ice cream sandwich', 237, 9.0, 37, false),
+  createData(uuid(), 'Eclair', 262, 16.0, 24, false),
+  createData(uuid(), 'Cupcake', 305, 3.7, 67, false),
+  createData(uuid(), 'Gingerbread', 356, 16.0, 49, false),
 ];
+
 
 function ScrollTop(props) {
 	const { children, window } = props;
@@ -79,22 +106,51 @@ ScrollTop.propTypes = {
 };
 
 export default function BackToTop(props) {
-	const [checked, setChecked] = React.useState(true);
+	const [todoList, updateTodoList] = useImmer(
+		rows
+	);
 
-	const handleChange = (event, item) => {
-		setChecked(event.target.checked);
-	};
+	function handleToggleTodo(id) {
+		updateTodoList(draft => {
+			const todo = draft.find(a =>
+				a.id === id
+			);
+			todo.isComplete = !todo.isComplete;
+		});
+	}
+
+	function handleDeleteTodo(id) {
+		updateTodoList( (draft) => {
+			const index = draft.findIndex(a =>
+				a.id === id
+			);
+			draft.splice(index, 1);
+		});
+	}
+
+	function handleAddTodo(id) {
+		updateTodoList( (draft) => {
+			draft.push(createData(uuid(), 'Frozen yoghurt', 159, 6.0, 24, false));
+		});
+	}
 
 	return (
+		<ThemeProvider theme={theme}>
 		<React.Fragment>
 			<CssBaseline />
 			<AppBar>
 				<Toolbar>
-					<Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-						News
-				  	</Typography>
-					<Button variant="contained" size="large" startIcon={<AddIcon />}>
-					  	Large
+					<Container sx={{    display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center'}}>
+						<MenuIcon></MenuIcon>
+						<Typography variant="p" component="div" >
+							FRAMEWORKS
+						</Typography>
+					</Container>
+					<Button onClick={(e) => {handleAddTodo(1234)}}
+						variant="contained" size="large" startIcon={<AddCircleIcon />} color={'secondary'}>
+					  	ADD
 					</Button>
 				</Toolbar>
 			</AppBar>
@@ -104,34 +160,49 @@ export default function BackToTop(props) {
 					  <Table sx={{ minWidth: 650 }} aria-label="simple table">
 							<TableHead>
 								  <TableRow>
-										<TableCell>Task</TableCell>
-										<TableCell align="right">Description</TableCell>
-										<TableCell align="right">Deadline</TableCell>
-										<TableCell align="right">Priority</TableCell>
-										<TableCell align="right">Is Complete</TableCell>
-										<TableCell align="right">Action</TableCell>
+										<TableCell align="center">Title</TableCell>
+										<TableCell align="center">Description</TableCell>
+										<TableCell align="center">Deadline</TableCell>
+										<TableCell align="center">Priority</TableCell>
+										<TableCell align="center">Is Complete</TableCell>
+										<TableCell align="center">Action</TableCell>
 								  </TableRow>
 							</TableHead>
 							<TableBody>
-								  {rows.map((row) => (
+								  {todoList.map((row) => (
 										<TableRow
-										  key={row.name}
+										  key={row.id}
 										  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
 										>
-											  <TableCell component="th" scope="row">
-												{row.name}
+											  <TableCell align="center" component="th" scope="row">
+												{row.title}
 											  </TableCell>
-											  <TableCell align="right">{row.calories}</TableCell>
-											  <TableCell align="right">{row.fat}</TableCell>
-											  <TableCell align="right">{row.carbs}</TableCell>
-											  <TableCell align="right">
+											  <TableCell align="center">{row.description}</TableCell>
+											  <TableCell align="center">{row.deadline}</TableCell>
+											  <TableCell align="center">{row.priority}</TableCell>
+											  <TableCell align="center">
 												  <Checkbox
-													  checked={checked}
-													  onChange={(e) => {handleChange(e, 1)}}
+													  checked={row.isComplete}
+													  onChange={(e) => {handleToggleTodo(row.id)}}
 													  inputProps={{ 'aria-label': 'controlled' }}
 												  />
 											  </TableCell>
-											  <TableCell align="right">{row.protein}</TableCell>
+											  <TableCell align="center" >
+												  <Container sx={{display: 'flex',
+													  flexDirection: 'column',
+													  alignItems: 'center',
+													  justifyContent: 'center'}}>
+													  <Button variant="contained" size="large" startIcon={<EditIcon />} color={'secondary'} sx={{width: '130px'}}>
+														  UPDATE
+													  </Button>
+													  <Button onClick={(e) => {handleDeleteTodo(row.id)}}
+														  variant="contained" size="large" startIcon={<CancelIcon />} color={'error'} sx={{width: '130px'}}
+													  >
+														  DELETE
+													  </Button>
+
+												  </Container>
+											  </TableCell>
 										</TableRow>
 								  ))}
 							</TableBody>
@@ -144,5 +215,6 @@ export default function BackToTop(props) {
 				</Fab>
 			</ScrollTop>
 		</React.Fragment>
+		</ThemeProvider>
 	);
 }

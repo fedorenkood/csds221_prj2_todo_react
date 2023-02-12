@@ -14,10 +14,13 @@
     "@material-ui/icons": "^4.11.3",
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.6",
+    "immer": "^9.0.19",
     "prop-types": "^15.8.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-scripts": "4.0.0"
+    "react-scripts": "4.0.0",
+    "react-uuid": "^2.0.0",
+    "use-immer": "^0.8.1"
   },
   "devDependencies": {
     "@babel/runtime": "7.13.8",
