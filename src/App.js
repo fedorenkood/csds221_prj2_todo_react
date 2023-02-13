@@ -11,7 +11,17 @@ import Container from '@mui/material/Container';
 import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Fade from '@mui/material/Fade';
-import {Button, Checkbox, createTheme, ThemeProvider} from "@mui/material";
+import {
+	Avatar,
+	Button,
+	Checkbox,
+	createTheme,
+	Dialog,
+	DialogTitle, List, ListItem,
+	ListItemAvatar,
+	TextField,
+	ThemeProvider
+} from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -26,8 +36,19 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {blue, red} from '@mui/material/colors';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { useImmer } from 'use-immer';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 
 import uuid from 'react-uuid';
+import dayjs from "dayjs";
 
 
 const theme = createTheme({
@@ -52,11 +73,11 @@ function createData(id, title, description, deadline, priority, isComplete) {
 }
 
 let rows = [
-  createData(uuid(), 'Frozen yoghurt', 159, 6.0, 24, false),
-  createData(uuid(), 'Ice cream sandwich', 237, 9.0, 37, false),
-  createData(uuid(), 'Eclair', 262, 16.0, 24, false),
-  createData(uuid(), 'Cupcake', 305, 3.7, 67, false),
-  createData(uuid(), 'Gingerbread', 356, 16.0, 49, false),
+  createData(uuid(), 'Frozen yoghurt', 159, '02/03/22', 'low', false),
+  createData(uuid(), 'Ice cream sandwich', 237, '02/03/22', 'low', false),
+  createData(uuid(), 'Eclair', 262, '02/03/22', 'low', false),
+  createData(uuid(), 'Cupcake', 305, '02/03/22', 'low', false),
+  createData(uuid(), 'Gingerbread', 356, '02/03/22', 'low', false),
 ];
 
 
@@ -105,10 +126,155 @@ ScrollTop.propTypes = {
 	window: PropTypes.func,
 };
 
+function SimpleDialog(props) {
+	const { onClose, onUpdate, open } = props;
+	const [title, setTitle] = React.useState('');
+	const [titleEmpty, setTitleEmpty] = React.useState(false);
+	const [titleHelperText, setTitleHelperText] = React.useState('');
+	const [description, setDescription] = React.useState('');
+	const [descriptionEmpty, setDescriptionEmpty] = React.useState(false);
+	const [descriptionHelperText, setDescriptionHelperText] = React.useState('');
+	const [selectedDate, setSelectedDate] = React.useState(dayjs());
+	const [priority, setPriority] = React.useState('low');
+
+	const handleTitleChange = (e) => {
+		let value = e.target.value;
+		setTitle(value);
+		if (value.length === 0) {
+			setTitleEmpty(true);
+			setTitleHelperText('Title is Required!');
+		} else {
+			setTitleEmpty(false);
+			setTitleHelperText(null);
+		}
+	};
+
+	const handleDescriptionChange = (e) => {
+		let value = e.target.value;
+		setDescription(value);
+		if (value.length === 0) {
+			setDescriptionEmpty(true);
+			setDescriptionHelperText('Description is Required!');
+		} else {
+			setDescriptionEmpty(false);
+			setDescriptionHelperText(null);
+		}
+	};
+
+	const handleDateChange = (newValue) => {
+		console.log(newValue.format('MM/DD/YY'));
+		setSelectedDate(newValue);
+	}
+
+	const handlePriorityChange = (e) => {
+		setPriority(e.target.value);
+	}
+
+	const handleClose = () => {
+		onClose();
+	};
+
+	const handleEdit = () => {
+		if (title.length === 0) {
+			setTitleEmpty(true);
+			setTitleHelperText('Title is Required!');
+		}
+		if (description.length === 0) {
+			setDescriptionEmpty(true);
+			setDescriptionHelperText('Description is Required!');
+		}
+		if (title.length !== 0 && description.length !== 0) {
+			onUpdate(createData(uuid(), title, description, selectedDate.format('MM/DD/YY'), priority, false));
+			setSelectedDate(dayjs());
+			setTitle('');
+			setDescription('');
+			setPriority('low');
+			onClose();
+		}
+	};
+
+	return (
+		<Dialog onClose={handleClose} open={open}>
+			<Toolbar sx={{backgroundColor: blue[800],
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'left',
+				color:'white'}}>
+				<AddCircleIcon></AddCircleIcon>
+				<Typography variant="p" component="div" >
+					Add Task
+				</Typography>
+			</Toolbar>
+			<Container sx={{display: 'flex', flexDirection: 'column', padding: '32px 32px 18px 32px'}}>
+				<TextField
+					value={title}
+					onChange={(e) => handleTitleChange(e)}
+					error={titleEmpty}
+					helperText={titleHelperText}
+					id="outlined-basic" label="Title" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
+				<TextField
+					value={description}
+					onChange={(e) => handleDescriptionChange(e)}
+					error={descriptionEmpty}
+					helperText={descriptionHelperText}
+					id="outlined-basic" label="Description" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
+				<LocalizationProvider dateAdapter={AdapterDayjs}  sx={{width: '280px', marginBottom: '24px'}} >
+					<DatePicker
+						label="Deadline"
+						value={selectedDate}
+						onChange={handleDateChange}
+						renderInput={(params) => <TextField {...params} />}
+					/>
+				</LocalizationProvider>
+				<FormControl  sx={{width: '280px', marginTop: '24px'}}>
+					<FormLabel id="demo-row-radio-buttons-group-label">Priority</FormLabel>
+					<RadioGroup
+						row
+						aria-labelledby="demo-row-radio-buttons-group-label"
+						name="row-radio-buttons-group"
+						value={priority}
+						onChange={handlePriorityChange}
+					>
+						<FormControlLabel value="low" control={<Radio />} label="Low" />
+						<FormControlLabel value="med" control={<Radio />} label="Med" />
+						<FormControlLabel value="high" control={<Radio />} label="High" />
+					</RadioGroup>
+				</FormControl>
+			</Container>
+			<Container  onClick={(e) => {handleEdit()}}
+				sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', padding: '5px!important'}}>
+				<Button variant="contained" size="large" startIcon={<AddCircleIcon />} color={'secondary'} sx={{width: '110px', margin: '5px'}}>
+					ADD
+				</Button>
+				<Button  onClick={(e) => {handleClose()}}
+					variant="contained" size="large" startIcon={<DoDisturbIcon />} color={'error'} sx={{width: '110px', margin: '5px'}}>
+					CANCEL
+				</Button>
+			</Container>
+		</Dialog>
+	);
+}
+
+SimpleDialog.propTypes = {
+	onClose: PropTypes.func.isRequired,
+	onUpdate: PropTypes.func.isRequired,
+	open: PropTypes.bool.isRequired,
+};
+
+
 export default function BackToTop(props) {
+	const [open, setOpen] = React.useState(false);
 	const [todoList, updateTodoList] = useImmer(
 		rows
 	);
+
+	const handleClickOpen = () => {
+		setOpen(true);
+	};
+
+	const handleClose = () => {
+		setOpen(false);
+	};
 
 	function handleToggleTodo(id) {
 		updateTodoList(draft => {
@@ -117,7 +283,7 @@ export default function BackToTop(props) {
 			);
 			todo.isComplete = !todo.isComplete;
 		});
-	}
+	};
 
 	function handleDeleteTodo(id) {
 		updateTodoList( (draft) => {
@@ -126,17 +292,31 @@ export default function BackToTop(props) {
 			);
 			draft.splice(index, 1);
 		});
-	}
+	};
 
-	function handleAddTodo(id) {
+	function handleAddTodo(newItem) {
 		updateTodoList( (draft) => {
-			draft.push(createData(uuid(), 'Frozen yoghurt', 159, 6.0, 24, false));
+			draft.push(newItem);
 		});
+	};
+
+	function CanUpdate(props) {
+		const isComplete = props.isComplete;
+		if (!isComplete) {
+			return <Button variant="contained" size="large" startIcon={<EditIcon />} color={'secondary'} sx={{width: '130px'}}>
+				UPDATE
+			</Button>;
+		}
 	}
 
 	return (
 		<ThemeProvider theme={theme}>
 		<React.Fragment>
+			<SimpleDialog
+				open={open}
+				onClose={handleClose}
+				onUpdate={handleAddTodo}
+			/>
 			<CssBaseline />
 			<AppBar>
 				<Toolbar>
@@ -148,7 +328,7 @@ export default function BackToTop(props) {
 							FRAMEWORKS
 						</Typography>
 					</Container>
-					<Button onClick={(e) => {handleAddTodo(1234)}}
+					<Button onClick={(e) => {handleClickOpen()}}
 						variant="contained" size="large" startIcon={<AddCircleIcon />} color={'secondary'}>
 					  	ADD
 					</Button>
@@ -192,9 +372,7 @@ export default function BackToTop(props) {
 													  flexDirection: 'column',
 													  alignItems: 'center',
 													  justifyContent: 'center'}}>
-													  <Button variant="contained" size="large" startIcon={<EditIcon />} color={'secondary'} sx={{width: '130px'}}>
-														  UPDATE
-													  </Button>
+													  <CanUpdate isComplete={row.isComplete}></CanUpdate>
 													  <Button onClick={(e) => {handleDeleteTodo(row.id)}}
 														  variant="contained" size="large" startIcon={<CancelIcon />} color={'error'} sx={{width: '130px'}}
 													  >
