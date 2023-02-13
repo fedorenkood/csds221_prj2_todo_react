@@ -12,13 +12,14 @@ import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Fade from '@mui/material/Fade';
 import {
+    Alert, AlertTitle,
     Avatar,
     Button,
     Checkbox,
     createTheme,
     Dialog,
     DialogTitle, List, ListItem,
-    ListItemAvatar,
+    ListItemAvatar, Stack,
     TextField,
     ThemeProvider
 } from "@mui/material";
@@ -33,7 +34,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import MenuIcon from '@mui/icons-material/Menu';
-import {blue, red} from '@mui/material/colors';
+import {blue, red, grey} from '@mui/material/colors';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { useImmer } from 'use-immer';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -44,6 +45,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import {SnackbarProvider, useSnackbar} from "notistack";
 
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 
@@ -62,7 +64,13 @@ const theme = createTheme({
         },
         error: {
             main: red[500]
-        }
+        },
+        text: {
+            primary: grey[700],
+            secondary: grey[800],
+            disabled: grey[800],
+            hint: grey[800],
+        },
     },
 });
 
@@ -382,6 +390,7 @@ export default function BackToTop(props) {
         rows
     );
     const [selectedRow, setSelectedRow] = React.useState(rows[0]);
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     const handleClickOpen = () => {
         setAddPopupOpen(true);
@@ -416,11 +425,21 @@ export default function BackToTop(props) {
             );
             draft.splice(index, 1);
         });
+        enqueueSnackbar('Task was deleted successfully!', {
+            variant: "success",
+            autoHideDuration: 5000
+            // anchorOrigin: { vertical: "top", horizontal: "right" }
+        });
     };
 
     function handleAddTodo(newItem) {
         updateTodoList( (draft) => {
             draft.push(newItem);
+        });
+        enqueueSnackbar('Task was added successfully!', {
+            variant: "success",
+            autoHideDuration: 5000
+            // anchorOrigin: { vertical: "top", horizontal: "right" }
         });
     };
 
@@ -432,6 +451,11 @@ export default function BackToTop(props) {
             todo.description = description;
             todo.deadline = deadline;
             todo.priority = priority;
+        });
+        enqueueSnackbar('Task was updated successfully!', {
+            variant: "success",
+            autoHideDuration: 5000
+            // anchorOrigin: { vertical: "top", horizontal: "right" }
         });
     };
 
@@ -478,59 +502,57 @@ export default function BackToTop(props) {
                     </Toolbar>
                 </AppBar>
                 <Toolbar id="back-to-top-anchor" />
-                <Container>
-                    <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell align="center">Title</TableCell>
-                                    <TableCell align="center">Description</TableCell>
-                                    <TableCell align="center">Deadline</TableCell>
-                                    <TableCell align="center">Priority</TableCell>
-                                    <TableCell align="center">Is Complete</TableCell>
-                                    <TableCell align="center">Action</TableCell>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', padding: '16px'}} >
+                    <Table sx={{ minWidth: 650}} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell align="center">Title</TableCell>
+                                <TableCell align="center">Description</TableCell>
+                                <TableCell align="center">Deadline</TableCell>
+                                <TableCell align="center">Priority</TableCell>
+                                <TableCell align="center">Is Complete</TableCell>
+                                <TableCell align="center">Action</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {todoList.map((row) => (
+
+                                <TableRow
+                                    key={row.id}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                >
+                                    <TableCell align="center" component="th" scope="row">
+                                        {row.title}
+                                    </TableCell>
+                                    <TableCell align="center">{row.description}</TableCell>
+                                    <TableCell align="center">{row.deadline}</TableCell>
+                                    <TableCell align="center">{row.priority}</TableCell>
+                                    <TableCell align="center">
+                                        <Checkbox
+                                            checked={row.isComplete}
+                                            onChange={(e) => {handleToggleTodo(row.id)}}
+                                            inputProps={{ 'aria-label': 'controlled' }}
+                                        />
+                                    </TableCell>
+                                    <TableCell align="center" >
+                                        <Container sx={{display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'}}>
+                                            <CanUpdate item={row}></CanUpdate>
+                                            <Button onClick={(e) => {handleDeleteTodo(row.id)}}
+                                                    variant="contained" size="large" startIcon={<CancelIcon />} color={'error'} sx={{width: '130px'}}
+                                            >
+                                                DELETE
+                                            </Button>
+
+                                        </Container>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {todoList.map((row) => (
-
-                                    <TableRow
-                                        key={row.id}
-                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                    >
-                                        <TableCell align="center" component="th" scope="row">
-                                            {row.title}
-                                        </TableCell>
-                                        <TableCell align="center">{row.description}</TableCell>
-                                        <TableCell align="center">{row.deadline}</TableCell>
-                                        <TableCell align="center">{row.priority}</TableCell>
-                                        <TableCell align="center">
-                                            <Checkbox
-                                                checked={row.isComplete}
-                                                onChange={(e) => {handleToggleTodo(row.id)}}
-                                                inputProps={{ 'aria-label': 'controlled' }}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="center" >
-                                            <Container sx={{display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'}}>
-                                                <CanUpdate item={row}></CanUpdate>
-                                                <Button onClick={(e) => {handleDeleteTodo(row.id)}}
-                                                        variant="contained" size="large" startIcon={<CancelIcon />} color={'error'} sx={{width: '130px'}}
-                                                >
-                                                    DELETE
-                                                </Button>
-
-                                            </Container>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Container>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
                 <ScrollTop {...props}>
                     <Fab size="small" aria-label="scroll back to top">
                         <KeyboardArrowUpIcon />
