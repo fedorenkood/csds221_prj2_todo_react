@@ -82,11 +82,9 @@ function createData(id, title, description, deadline, priority, isComplete) {
 }
 
 let rows = [
-    createData(uuid(), 'Frozen yoghurt', 159, '02/03/22', 'low', false),
-    createData(uuid(), 'Ice cream sandwich', 237, '02/03/22', 'low', false),
-    createData(uuid(), 'Eclair', 262, '02/03/22', 'low', false),
-    createData(uuid(), 'Cupcake', 305, '02/03/22', 'low', false),
-    createData(uuid(), 'Gingerbread', 356, '02/03/22', 'low', false),
+    createData(uuid(), 'Title 1', 'description 1', dayjs().format('MM/DD/YY'), 'low', false),
+    createData(uuid(), 'Title 2', 'description 2', dayjs().format('MM/DD/YY'), 'low', false),
+    createData(uuid(), 'Title 3', 'description 3', dayjs().format('MM/DD/YY'), 'low', false),
 ];
 
 
@@ -297,7 +295,6 @@ function UpdatePopup(props) {
     };
 
     const handleDateChange = (newValue) => {
-        console.log(newValue.format('MM/DD/YY'));
         setSelectedDate(newValue);
     }
 
@@ -504,6 +501,14 @@ export default function BackToTop(props) {
                 <Toolbar id="back-to-top-anchor" />
                 <TableContainer component={Paper} sx={{ boxShadow: 'none', padding: '16px'}} >
                     <Table sx={{ minWidth: 650}} aria-label="simple table">
+                        <colgroup>
+                            <col style={{width:'16.66%'}}/>
+                            <col style={{width:'16.66%'}}/>
+                            <col style={{width:'16.66%'}}/>
+                            <col style={{width:'16.66%'}}/>
+                            <col style={{width:'16.66%'}}/>
+                            <col style={{width:'16.66%'}}/>
+                        </colgroup>
                         <TableHead>
                             <TableRow>
                                 <TableCell align="center">Title</TableCell>
