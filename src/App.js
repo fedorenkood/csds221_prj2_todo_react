@@ -133,16 +133,22 @@ ScrollTop.propTypes = {
     window: PropTypes.func,
 };
 
-function AddPopup(props) {
-    const { onClose, onUpdate, open } = props;
-    const [title, setTitle] = React.useState('');
+function TodoPopup(props) {
+    const { item, onClose, onUpdate, onAdd, open, isAdd } = props;
+    const [title, setTitle] = React.useState(item.title);
     const [titleEmpty, setTitleEmpty] = React.useState(false);
     const [titleHelperText, setTitleHelperText] = React.useState('');
-    const [description, setDescription] = React.useState('');
+    const [description, setDescription] = React.useState(item.description);
     const [descriptionEmpty, setDescriptionEmpty] = React.useState(false);
     const [descriptionHelperText, setDescriptionHelperText] = React.useState('');
-    const [selectedDate, setSelectedDate] = React.useState(dayjs());
-    const [priority, setPriority] = React.useState('low');
+    const [selectedDate, setSelectedDate] = React.useState(dayjs(item.deadline));
+    const [priority, setPriority] = React.useState(item.priority);
+
+    useEffect(() => {
+        setDescription(item.description);
+        setSelectedDate(dayjs(item.deadline));
+        setPriority(item.priority);
+    }, [props.item]);
 
     const handleTitleChange = (e) => {
         let value = e.target.value;
@@ -169,7 +175,6 @@ function AddPopup(props) {
     };
 
     const handleDateChange = (newValue) => {
-        console.log(newValue.format('MM/DD/YY'));
         setSelectedDate(newValue);
     }
 
@@ -181,7 +186,7 @@ function AddPopup(props) {
         onClose();
     };
 
-    const handleEdit = () => {
+    const handleAdd = () => {
         if (title.length === 0) {
             setTitleEmpty(true);
             setTitleHelperText('Title is Required!');
@@ -191,7 +196,7 @@ function AddPopup(props) {
             setDescriptionHelperText('Description is Required!');
         }
         if (title.length !== 0 && description.length !== 0) {
-            onUpdate(createData(uuid(), title, description, selectedDate.format('MM/DD/YY'), priority, false));
+            onAdd(createData(item.id, title, description, selectedDate.format('MM/DD/YY'), priority, item.isComplete));
             setSelectedDate(dayjs());
             setTitle('');
             setDescription('');
@@ -199,6 +204,39 @@ function AddPopup(props) {
             onClose();
         }
     };
+
+    const handleEdit = () => {
+        if (description.length === 0) {
+            setDescriptionEmpty(true);
+            setDescriptionHelperText('Description is Required!');
+        } else {
+            onUpdate(item.id, description, selectedDate.format('MM/DD/YY'), priority);
+            onClose();
+        }
+    };
+
+    const editButton = () => {
+        return <Button onClick={(e) => {handleEdit()}}
+                       variant="contained" size="large" startIcon={<EditIcon />} color={'secondary'} sx={{width: '110px', margin: '5px'}}>
+            EDIT
+        </Button>;
+    }
+
+    const addButton = () => {
+        return <Button onClick={(e) => {handleAdd()}}
+                       variant="contained" size="large" startIcon={<AddCircleIcon />} color={'secondary'} sx={{width: '110px', margin: '5px'}}>
+            ADD
+        </Button>;
+    }
+
+    const titleBlock = () => {
+        return <TextField
+            value={title}
+            onChange={(e) => handleTitleChange(e)}
+            error={titleEmpty}
+            helperText={titleHelperText}
+            id="outlined-basic" label="Title" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
+    }
 
     return (
         <Dialog onClose={handleClose} open={open}>
@@ -213,12 +251,7 @@ function AddPopup(props) {
                 </Typography>
             </Toolbar>
             <Container sx={{display: 'flex', flexDirection: 'column', padding: '32px 32px 18px 32px'}}>
-                <TextField
-                    value={title}
-                    onChange={(e) => handleTitleChange(e)}
-                    error={titleEmpty}
-                    helperText={titleHelperText}
-                    id="outlined-basic" label="Title" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
+                {isAdd && titleBlock()}
                 <TextField
                     value={description}
                     onChange={(e) => handleDescriptionChange(e)}
@@ -249,10 +282,8 @@ function AddPopup(props) {
                 </FormControl>
             </Container>
             <Container sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', padding: '5px!important'}}>
-                <Button onClick={(e) => {handleEdit()}}
-                    variant="contained" size="large" startIcon={<AddCircleIcon />} color={'secondary'} sx={{width: '110px', margin: '5px'}}>
-                    ADD
-                </Button>
+                {!isAdd && editButton()}
+                {isAdd && addButton()}
                 <Button  onClick={(e) => {handleClose()}}
                          variant="contained" size="large" startIcon={<DoDisturbIcon />} color={'error'} sx={{width: '110px', margin: '5px'}}>
                     CANCEL
@@ -262,121 +293,13 @@ function AddPopup(props) {
     );
 }
 
-AddPopup.propTypes = {
+TodoPopup.propTypes = {
     onClose: PropTypes.func.isRequired,
     onUpdate: PropTypes.func.isRequired,
-    open: PropTypes.bool.isRequired,
-};
-
-function UpdatePopup(props) {
-    const { item, onClose, onUpdate, open } = props;
-    const [description, setDescription] = React.useState(item.description);
-    const [descriptionEmpty, setDescriptionEmpty] = React.useState(false);
-    const [descriptionHelperText, setDescriptionHelperText] = React.useState('');
-    const [selectedDate, setSelectedDate] = React.useState(dayjs(item.deadline));
-    const [priority, setPriority] = React.useState(item.priority);
-
-    useEffect(() => {
-        setDescription(item.description);
-        setSelectedDate(dayjs(item.deadline));
-        setPriority(item.priority);
-    }, [props.item]);
-
-    const handleDescriptionChange = (e) => {
-        let value = e.target.value;
-        setDescription(value);
-        if (value.length === 0) {
-            setDescriptionEmpty(true);
-            setDescriptionHelperText('Description is Required!');
-        } else {
-            setDescriptionEmpty(false);
-            setDescriptionHelperText(null);
-        }
-    };
-
-    const handleDateChange = (newValue) => {
-        setSelectedDate(newValue);
-    }
-
-    const handlePriorityChange = (e) => {
-        setPriority(e.target.value);
-    }
-
-    const handleClose = () => {
-        onClose();
-    };
-
-    const handleEdit = () => {
-        if (description.length === 0) {
-            setDescriptionEmpty(true);
-            setDescriptionHelperText('Description is Required!');
-        } else {
-            onUpdate(item.id, description, selectedDate.format('MM/DD/YY'), priority);
-            onClose();
-        }
-    };
-
-    return (
-        <Dialog onClose={handleClose} open={open}>
-            <Toolbar sx={{backgroundColor: blue[800],
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'left',
-                color:'white'}}>
-                <EditIcon></EditIcon>
-                <Typography variant="p" component="div" >
-                    Edit Task
-                </Typography>
-            </Toolbar>
-            <Container sx={{display: 'flex', flexDirection: 'column', padding: '32px 32px 18px 32px'}}>
-                <TextField
-                    value={description}
-                    onChange={(e) => handleDescriptionChange(e)}
-                    error={descriptionEmpty}
-                    helperText={descriptionHelperText}
-                    id="outlined-basic" label="Description" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
-                <LocalizationProvider dateAdapter={AdapterDayjs}  sx={{width: '280px', marginBottom: '24px'}} >
-                    <DatePicker
-                        label="Deadline"
-                        value={selectedDate}
-                        onChange={handleDateChange}
-                        renderInput={(params) => <TextField {...params} />}
-                    />
-                </LocalizationProvider>
-                <FormControl  sx={{width: '280px', marginTop: '24px'}}>
-                    <FormLabel id="demo-row-radio-buttons-group-label">Priority</FormLabel>
-                    <RadioGroup
-                        row
-                        aria-labelledby="demo-row-radio-buttons-group-label"
-                        name="row-radio-buttons-group"
-                        value={priority}
-                        onChange={handlePriorityChange}
-                    >
-                        <FormControlLabel value="low" control={<Radio />} label="Low" />
-                        <FormControlLabel value="med" control={<Radio />} label="Med" />
-                        <FormControlLabel value="high" control={<Radio />} label="High" />
-                    </RadioGroup>
-                </FormControl>
-            </Container>
-            <Container sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', padding: '5px!important'}}>
-                <Button onClick={(e) => {handleEdit()}}
-                    variant="contained" size="large" startIcon={<EditIcon />} color={'secondary'} sx={{width: '110px', margin: '5px'}}>
-                    EDIT
-                </Button>
-                <Button  onClick={(e) => {handleClose()}}
-                         variant="contained" size="large" startIcon={<DoDisturbIcon />} color={'error'} sx={{width: '110px', margin: '5px'}}>
-                    CANCEL
-                </Button>
-            </Container>
-        </Dialog>
-    );
-}
-
-UpdatePopup.propTypes = {
-    onClose: PropTypes.func.isRequired,
-    onUpdate: PropTypes.func.isRequired,
+    onAdd: PropTypes.func.isRequired,
     item: PropTypes.object.isRequired,
     open: PropTypes.bool.isRequired,
+    isAdd: PropTypes.bool.isRequired,
 };
 
 
@@ -470,16 +393,21 @@ export default function BackToTop(props) {
     return (
         <ThemeProvider theme={theme}>
             <React.Fragment>
-                <AddPopup
+                <TodoPopup
                     open={addPopupOpen}
+                    item={createData(uuid(), '', '', dayjs().format('MM/DD/YY'), 'low', false)}
                     onClose={handleClose}
-                    onUpdate={handleAddTodo}
+                    onAdd={handleAddTodo}
+                    onUpdate={() => {}}
+                    isAdd={true}
                 />
-                <UpdatePopup
+                <TodoPopup
                     open={editPopupOpen}
                     item={selectedRow}
                     onClose={handleEditClose}
+                    onAdd={() => {}}
                     onUpdate={handleUpdateTodo}
+                    isAdd={false}
                 />
                 <CssBaseline />
                 <AppBar>
