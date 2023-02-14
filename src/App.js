@@ -157,8 +157,7 @@ function TodoPopup(props) {
         setPriority(item.priority);
     }, [props.item]);
 
-    const handleTitleChange = (e) => {
-        let value = e.target.value;
+    const handleTitleChange = (value) => {
         setTitle(value);
 
         if (value.length === 0) {
@@ -174,8 +173,7 @@ function TodoPopup(props) {
         }
     };
 
-    const handleDescriptionChange = (e) => {
-        let value = e.target.value;
+    const handleDescriptionChange = (value) => {
         setDescription(value);
         if (value.length === 0) {
             setDescriptionEmpty(true);
@@ -197,9 +195,9 @@ function TodoPopup(props) {
         }
     }
 
-    const handlePriorityChange = (e) => {
-        setPriority(e.target.value);
-        if (e.target.value.length === 0) {
+    const handlePriorityChange = (value) => {
+        setPriority(value);
+        if (value.length === 0) {
             setPriorityEmpty(true);
             setPriorityHelperText('Priority is Required!');
         } else {
@@ -209,6 +207,20 @@ function TodoPopup(props) {
     }
 
     const handleClose = () => {
+        if (item) {
+            handleTitleChange(item.title);
+            handleDescriptionChange(item.description);
+            handleDateChange(dayjs(item.deadline));
+            handlePriorityChange(item.priority);
+        }
+        setTitleEmpty(false);
+        setTitleHelperText('');
+        setDescriptionEmpty(false);
+        setDescriptionHelperText('');
+        setSelectedDateEmpty(false);
+        setSelectedDateHelperText('');
+        setPriorityEmpty(false);
+        setPriorityHelperText('');
         onClose();
     };
 
@@ -244,7 +256,7 @@ function TodoPopup(props) {
             setTitle('');
             setDescription('');
             setPriority('low');
-            onClose();
+            handleClose();
         }
     };
 
@@ -252,7 +264,7 @@ function TodoPopup(props) {
         checks();
         if (!titles.includes(title) && selectedDate !== null && priority.length !== 0 && title.length !== 0 && description.length !== 0) {
             onUpdate(item.id, description, selectedDate.format('MM/DD/YY'), priority);
-            onClose();
+            handleClose();
         }
     };
 
@@ -273,7 +285,7 @@ function TodoPopup(props) {
     const titleBlock = () => {
         return <TextField
             value={title}
-            onChange={(e) => handleTitleChange(e)}
+            onChange={(e) => handleTitleChange(e.target.value)}
             error={titleEmpty}
             helperText={titleHelperText}
             id="outlined-basic" label="Title" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
@@ -313,7 +325,7 @@ function TodoPopup(props) {
                 {isAdd && titleBlock()}
                 <TextField
                     value={description}
-                    onChange={(e) => handleDescriptionChange(e)}
+                    onChange={(e) => handleDescriptionChange(e.target.value)}
                     error={descriptionEmpty}
                     helperText={descriptionHelperText}
                     id="outlined-basic" label="Description" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
@@ -337,7 +349,7 @@ function TodoPopup(props) {
                         aria-labelledby="demo-row-radio-buttons-group-label"
                         name="row-radio-buttons-group"
                         value={priority}
-                        onChange={handlePriorityChange}
+                        onChange={(e) => handlePriorityChange(e.target.value)}
                     >
                         <FormControlLabel value="low" control={<Radio />} label="Low" />
                         <FormControlLabel value="med" control={<Radio />} label="Med" />
