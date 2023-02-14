@@ -18,7 +18,7 @@ import {
     Checkbox,
     createTheme,
     Dialog,
-    DialogTitle, List, ListItem,
+    DialogTitle, FormHelperText, List, ListItem,
     ListItemAvatar, Stack,
     TextField,
     ThemeProvider
@@ -329,7 +329,8 @@ function TodoPopup(props) {
                         />}
                     />
                 </LocalizationProvider>
-                <FormControl  sx={{width: '280px', marginTop: '24px'}}>
+                <FormControl  sx={{width: '280px', marginTop: '24px'}}
+                              error={priorityEmpty}>
                     <FormLabel id="demo-row-radio-buttons-group-label">Priority</FormLabel>
                     <RadioGroup
                         row
@@ -342,6 +343,7 @@ function TodoPopup(props) {
                         <FormControlLabel value="med" control={<Radio />} label="Med" />
                         <FormControlLabel value="high" control={<Radio />} label="High" />
                     </RadioGroup>
+                    {priorityEmpty && <FormHelperText error>{priorityHelperText}</FormHelperText>}
                 </FormControl>
             </Container>
             <Container sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', padding: '5px!important'}}>
