@@ -134,15 +134,22 @@ ScrollTop.propTypes = {
 };
 
 function TodoPopup(props) {
-    const { item, onClose, onUpdate, onAdd, open, isAdd } = props;
+    const { item, onClose, onUpdate, onAdd, open, isAdd, titles } = props;
     const [title, setTitle] = React.useState(item.title);
     const [titleEmpty, setTitleEmpty] = React.useState(false);
     const [titleHelperText, setTitleHelperText] = React.useState('');
+
     const [description, setDescription] = React.useState(item.description);
     const [descriptionEmpty, setDescriptionEmpty] = React.useState(false);
     const [descriptionHelperText, setDescriptionHelperText] = React.useState('');
+
     const [selectedDate, setSelectedDate] = React.useState(dayjs(item.deadline));
+    const [selectedDateEmpty, setSelectedDateEmpty] = React.useState(false);
+    const [selectedDateHelperText, setSelectedDateHelperText] = React.useState('');
+
     const [priority, setPriority] = React.useState(item.priority);
+    const [priorityEmpty, setPriorityEmpty] = React.useState(false);
+    const [priorityHelperText, setPriorityHelperText] = React.useState('');
 
     useEffect(() => {
         setDescription(item.description);
@@ -153,12 +160,17 @@ function TodoPopup(props) {
     const handleTitleChange = (e) => {
         let value = e.target.value;
         setTitle(value);
+
         if (value.length === 0) {
             setTitleEmpty(true);
             setTitleHelperText('Title is Required!');
         } else {
             setTitleEmpty(false);
-            setTitleHelperText(null);
+            setTitleHelperText('');
+        }
+        if (titles.includes(value)) {
+            setTitleEmpty(true);
+            setTitleHelperText('Title must be unique!');
         }
     };
 
@@ -170,23 +182,41 @@ function TodoPopup(props) {
             setDescriptionHelperText('Description is Required!');
         } else {
             setDescriptionEmpty(false);
-            setDescriptionHelperText(null);
+            setDescriptionHelperText("");
         }
     };
 
     const handleDateChange = (newValue) => {
         setSelectedDate(newValue);
+        if (newValue === null) {
+            setSelectedDateEmpty(true);
+            setSelectedDateHelperText('Deadline is Required!');
+        } else {
+            setSelectedDateEmpty(false);
+            setSelectedDateHelperText('');
+        }
     }
 
     const handlePriorityChange = (e) => {
         setPriority(e.target.value);
+        if (e.target.value.length === 0) {
+            setPriorityEmpty(true);
+            setPriorityHelperText('Priority is Required!');
+        } else {
+            setPriorityEmpty(false);
+            setPriorityHelperText('');
+        }
     }
 
     const handleClose = () => {
         onClose();
     };
 
-    const handleAdd = () => {
+    const checks = () => {
+        if (titles.includes(title)) {
+            setTitleEmpty(true);
+            setTitleHelperText('Title must be unique!');
+        }
         if (title.length === 0) {
             setTitleEmpty(true);
             setTitleHelperText('Title is Required!');
@@ -195,7 +225,20 @@ function TodoPopup(props) {
             setDescriptionEmpty(true);
             setDescriptionHelperText('Description is Required!');
         }
-        if (title.length !== 0 && description.length !== 0) {
+        if (priority.length === 0) {
+            setPriorityEmpty(true);
+            setPriorityHelperText('Priority is Required!');
+        }
+        if (selectedDate === null) {
+            setSelectedDateEmpty(true);
+            setSelectedDateHelperText('Deadline is Required!');
+        }
+
+    }
+
+    const handleAdd = () => {
+        checks();
+        if (!titles.includes(title) && selectedDate !== null && priority.length !== 0 && title.length !== 0 && description.length !== 0) {
             onAdd(createData(item.id, title, description, selectedDate.format('MM/DD/YY'), priority, item.isComplete));
             setSelectedDate(dayjs());
             setTitle('');
@@ -206,10 +249,8 @@ function TodoPopup(props) {
     };
 
     const handleEdit = () => {
-        if (description.length === 0) {
-            setDescriptionEmpty(true);
-            setDescriptionHelperText('Description is Required!');
-        } else {
+        checks();
+        if (!titles.includes(title) && selectedDate !== null && priority.length !== 0 && title.length !== 0 && description.length !== 0) {
             onUpdate(item.id, description, selectedDate.format('MM/DD/YY'), priority);
             onClose();
         }
@@ -238,18 +279,36 @@ function TodoPopup(props) {
             id="outlined-basic" label="Title" variant="outlined" sx={{width: '280px', paddingBottom: '32px'}} />
     }
 
+    const editToolbar = () => {
+        return <Toolbar sx={{backgroundColor: blue[800],
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'left',
+            color:'white'}}>
+            <EditIcon></EditIcon>
+            <Typography variant="p" component="div" >
+                Edit Task
+            </Typography>
+        </Toolbar>
+    }
+
+    const addToolbar = () => {
+        return <Toolbar sx={{backgroundColor: blue[800],
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'left',
+            color:'white'}}>
+            <AddCircleIcon></AddCircleIcon>
+            <Typography variant="p" component="div" >
+                Add Task
+            </Typography>
+        </Toolbar>
+    }
+
     return (
         <Dialog onClose={handleClose} open={open}>
-            <Toolbar sx={{backgroundColor: blue[800],
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'left',
-                color:'white'}}>
-                <AddCircleIcon></AddCircleIcon>
-                <Typography variant="p" component="div" >
-                    Add Task
-                </Typography>
-            </Toolbar>
+            {!isAdd && editToolbar()}
+            {isAdd && addToolbar()}
             <Container sx={{display: 'flex', flexDirection: 'column', padding: '32px 32px 18px 32px'}}>
                 {isAdd && titleBlock()}
                 <TextField
@@ -263,7 +322,11 @@ function TodoPopup(props) {
                         label="Deadline"
                         value={selectedDate}
                         onChange={handleDateChange}
-                        renderInput={(params) => <TextField {...params} />}
+                        renderInput={(params) => <TextField
+                            {...params}
+                            error={selectedDateEmpty}
+                            helperText={selectedDateHelperText}
+                        />}
                     />
                 </LocalizationProvider>
                 <FormControl  sx={{width: '280px', marginTop: '24px'}}>
@@ -298,6 +361,7 @@ TodoPopup.propTypes = {
     onUpdate: PropTypes.func.isRequired,
     onAdd: PropTypes.func.isRequired,
     item: PropTypes.object.isRequired,
+    titles: PropTypes.array.isRequired,
     open: PropTypes.bool.isRequired,
     isAdd: PropTypes.bool.isRequired,
 };
@@ -394,6 +458,7 @@ export default function BackToTop(props) {
         <ThemeProvider theme={theme}>
             <React.Fragment>
                 <TodoPopup
+                    titles={todoList.map((item) => (item.title))}
                     open={addPopupOpen}
                     item={createData(uuid(), '', '', dayjs().format('MM/DD/YY'), 'low', false)}
                     onClose={handleClose}
@@ -402,6 +467,7 @@ export default function BackToTop(props) {
                     isAdd={true}
                 />
                 <TodoPopup
+                    titles={todoList.map((item) => (item.title))}
                     open={editPopupOpen}
                     item={selectedRow}
                     onClose={handleEditClose}
