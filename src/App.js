@@ -262,7 +262,7 @@ function TodoPopup(props) {
 
     const handleEdit = () => {
         checks();
-        if (!titles.includes(title) && selectedDate !== null && priority.length !== 0 && title.length !== 0 && description.length !== 0) {
+        if (selectedDate !== null && priority.length !== 0 && title.length !== 0 && description.length !== 0) {
             onUpdate(item.id, description, selectedDate.format('MM/DD/YY'), priority);
             handleClose();
         }
